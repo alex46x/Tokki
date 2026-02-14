@@ -1,0 +1,29 @@
+query ListAllUsers @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  users {
+    id
+    username
+    displayName
+    profilePictureUrl
+    createdAt
+  }
+}
+
+query GetMyMessages @auth(level: USER) {
+  messages(where: {recipientId: {eq_expr: "auth.uid"}}) {
+    id
+    content
+    createdAt
+    senderIp
+    recipient {
+      username
+    }
+  }
+}
+
+mutation CreateProfileLink($linkId: String!) @auth(level: USER) {
+  profileLink_insert(data: {userId_expr: "auth.uid", linkId: $linkId, createdAt_expr: "request.time"})
+}
+
+mutation SendMessage($recipientId: UUID!, $content: String!) @auth(level: USER) {
+  message_insert(data: {recipientId: $recipientId, content: $content, createdAt_expr: "request.time", senderIp_expr: "request.ip"})
+}

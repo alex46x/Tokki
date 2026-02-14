@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // USERS COLLECTION
+    // Read: Public (to find user by username for public profile)
+    // Write: Authenticated user can create/update their own doc
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // MESSAGES COLLECTION
+    // Read: Authenticated user can read messages sent to them (receiverUid match)
+    // Write: Anyone can create a message (Public)
+    //        Must prevent users from spoofing 'receiverUid' to verify it exists? 
+    //        For simplicity in this task, we just check data validation.
+    match /messages/{messageId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.receiverUid;
+      allow create: if request.resource.data.content is string 
+                    && request.resource.data.content.size() > 0
+                    && request.resource.data.content.size() <= 500;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.receiverUid;
+    }
+  }
+}

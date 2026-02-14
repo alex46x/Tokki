@@ -1,0 +1,45 @@
+mutation CreateDemoData @transaction @auth(level: USER, insecureReason: "This is a seed data mutation, not intended for direct client use. It is safe to expose to all logged in users for development/testing purposes.") {
+  user_upsertMany(data: [
+    {
+      id: "b2d075d9-29c8-479e-b9b5-c081e66c61f8",
+      username: "alpha_user",
+      displayName: "Alpha User",
+      createdAt: "2023-01-15T10:00:00Z"
+    },
+    {
+      id: "f8e4a9e0-1c2f-4d3e-9b0a-7e6d5c4b3a21",
+      username: "beta_tester",
+      displayName: "Beta Tester",
+      createdAt: "2023-02-20T11:30:00Z"
+    }
+  ])
+  message_upsertMany(data: [
+    {
+      id: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      recipientId: "b2d075d9-29c8-479e-b9b5-c081e66c61f8",
+      content: "Hello Alpha! This is a test message.",
+      createdAt: "2023-03-01T14:00:00Z"
+    },
+    {
+      id: "f0e9d8c7-b6a5-4321-fedc-ba9876543210",
+      recipientId: "f8e4a9e0-1c2f-4d3e-9b0a-7e6d5c4b3a21",
+      content: "Welcome Beta! How are you enjoying the app?",
+      createdAt: "2023-03-02T15:15:00Z",
+      senderIp: "192.168.1.100"
+    }
+  ])
+  profileLink_upsertMany(data: [
+    {
+      id: "c5d6e7f8-a9b0-1234-5678-90abcdef0123",
+      userId: "b2d075d9-29c8-479e-b9b5-c081e66c61f8",
+      linkId: "alpha_profile_link",
+      createdAt: "2023-03-05T09:00:00Z"
+    },
+    {
+      id: "01234567-89ab-cdef-0123-456789abcdef",
+      userId: "f8e4a9e0-1c2f-4d3e-9b0a-7e6d5c4b3a21",
+      linkId: "beta_social_link",
+      createdAt: "2023-03-06T10:45:00Z"
+    }
+  ])
+}

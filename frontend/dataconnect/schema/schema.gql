@@ -1,0 +1,19 @@
+type User @table {
+  username: String!
+  createdAt: Timestamp!
+  displayName: String
+  profilePictureUrl: String
+}
+
+type ProfileLink @table {
+  linkId: String!
+  createdAt: Timestamp!
+  user: User!
+}
+
+type Message @table {
+  content: String!
+  createdAt: Timestamp!
+  recipient: User!
+  senderIp: String
+}
