@@ -555,17 +555,16 @@
 
 
 // Gemini 2 =>
-
 import { createContext, useState, useEffect, useContext } from "react";
 import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
-  getRedirectResult,
+  getRedirectResult, // এটি খুব গুরুত্বপূর্ণ
   signOut,
 } from "firebase/auth";
-import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../../firebase.config";
 
 const AuthContext = createContext(null);
@@ -574,86 +573,62 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Google Login (Desktop + Mobile Auto-switch)
   const googleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-      prompt: "select_account",
-    });
+    provider.setCustomParameters({ prompt: "select_account" });
 
-    // চেক করবে ইউজার মোবাইল না কি ডেস্কটপ
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     try {
       if (isMobile) {
-        // মোবাইলের জন্য রিডাইরেক্ট (পপ-আপ এরর হবে না)
+        // মোবাইলে পপ-আপ নয়, ডাইরেক্ট রিডাইরেক্ট হবে
         await signInWithRedirect(auth, provider);
       } else {
-        // পিসির জন্য পপ-আপ
         await signInWithPopup(auth, provider);
       }
     } catch (error) {
       console.error("Login Error:", error);
-      throw error;
+      alert("Login Error: " + error.message);
     }
   };
 
-  // ✅ Logout
   const logout = () => signOut(auth);
 
-  // ✅ Auth State & Firestore Sync
   useEffect(() => {
-    let unsubscribeSnapshot = null;
+    // ১. রিডাইরেক্ট হয়ে ফিরে আসার পর ডেটা ধরার জন্য
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          console.log("Redirect login success");
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect Result Error:", error);
+      });
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      // আগের কোনো স্ন্যাপশট লিসেনার থাকলে তা বন্ধ করা
-      if (unsubscribeSnapshot) unsubscribeSnapshot();
-
+    // ২. অথ স্টেট লিসেনার
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         const userRef = doc(db, "users", firebaseUser.uid);
-
-        // রিয়েল-টাইম ডেটাবেস লিসেনার
-        unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
+        
+        // রিয়েল-টাইম সিঙ্ক
+        const unsubSnapshot = onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-              photoURL: firebaseUser.photoURL,
-              ...docSnap.data(),
-              isUsernameSet: true,
-            });
+            setUser({ uid: firebaseUser.uid, ...firebaseUser, ...docSnap.data(), isUsernameSet: true });
           } else {
-            // যদি ফায়ারস্টোরে ডেটা না থাকে (প্রথমবার লগইন)
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-              photoURL: firebaseUser.photoURL,
-              isUsernameSet: false,
-            });
+            setUser({ uid: firebaseUser.uid, email: firebaseUser.email, isUsernameSet: false });
           }
-          setLoading(false);
-        }, (err) => {
-          console.error("Firestore error:", err);
           setLoading(false);
         });
 
+        return () => unsubSnapshot();
       } else {
         setUser(null);
         setLoading(false);
       }
     });
 
-    // রিডাইরেক্ট হয়ে ফিরে আসার পর রেজাল্ট চেক করা (মোবাইলের জন্য জরুরি)
-    getRedirectResult(auth).catch((error) => {
-      console.error("Redirect Result Error:", error);
-    });
-
-    return () => {
-      unsubscribeAuth();
-      if (unsubscribeSnapshot) unsubscribeSnapshot();
-    };
+    return () => unsubscribeAuth();
   }, []);
 
   return (
