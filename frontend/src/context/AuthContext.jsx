@@ -280,12 +280,17 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // -----------------------------
-  // Google Login (Desktop + Mobile SAFE)
-  // -----------------------------
+  // -----------------------------------
+  // Google Login (Desktop + Mobile)
+  // -----------------------------------
   const googleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    provider.setCustomParameters({
+      prompt: "select_account",
+    });
+
+    const isMobile =
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     try {
       if (isMobile) {
@@ -293,32 +298,32 @@ export const AuthProvider = ({ children }) => {
       } else {
         await signInWithPopup(auth, provider);
       }
-    } catch (error) {
-      console.error("Google Sign-In Error:", error);
-      throw error;
+    } catch (err) {
+      console.error("Google login failed:", err);
+      throw err;
     }
   };
 
-  // -----------------------------
+  // -----------------------------------
   // Logout
-  // -----------------------------
+  // -----------------------------------
   const logout = async () => {
     await signOut(auth);
     setUser(null);
   };
 
-  // -----------------------------
-  // Auth State Listener (🔥 MAIN FIX HERE)
-  // -----------------------------
+  // -----------------------------------
+  // Auth State Listener (ONLY THIS)
+  // -----------------------------------
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (!firebaseUser) {
-          setUser(null);
-          setLoading(false);
-          return;
-        }
+      if (!firebaseUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
 
+      try {
         const userRef = doc(db, "users", firebaseUser.uid);
         const snap = await getDoc(userRef);
 
@@ -339,7 +344,7 @@ export const AuthProvider = ({ children }) => {
           });
         }
       } catch (err) {
-        console.error("Auth fetch error:", err);
+        console.error("Firestore error:", err);
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
@@ -362,3 +367,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
