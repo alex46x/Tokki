@@ -84,7 +84,7 @@ const MessageShareCard = ({ message, user, onClose }) => {
                             Reply anonymously at
                         </p>
                         <div className="bg-black text-white px-4 py-2 rounded-full font-bold text-sm shadow-md">
-                            tokki.app/u/{user.username}
+                            tokki-b2yd.vercel.app/u/{user.username}
                         </div>
                     </div>
                 </div>

@@ -68,7 +68,7 @@ const ProfileShareCard = ({ user, onClose }) => {
                     </div>
 
                     <div className="z-10 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1 text-xs text-white/80 font-mono mt-auto mb-4">
-                        tokki.app/u/{user.username}
+                        tokki-b2yd.vercel.app/u/{user.username}
                     </div>
                 </div>
 
