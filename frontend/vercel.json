@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/__/auth/:path*",
+      "destination": "https://tokki-516d4.firebaseapp.com/__/auth/:path*"
     }
   ]
 }

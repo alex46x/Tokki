@@ -114,132 +114,132 @@
 
 
 
-import { createContext, useState, useEffect, useContext } from "react";
-import {
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
-  signOut,
-} from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../../firebase.config";
+// import { createContext, useState, useEffect, useContext } from "react";
+// import {
+//   onAuthStateChanged,
+//   GoogleAuthProvider,
+//   signInWithPopup,
+//   signInWithRedirect,
+//   getRedirectResult,
+//   signOut,
+// } from "firebase/auth";
+// import { doc, getDoc } from "firebase/firestore";
+// import { auth, db } from "../../firebase.config";
 
-const AuthContext = createContext(null);
+// const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+// export const AuthProvider = ({ children }) => {
+//   const [user, setUser] = useState(null);
+//   const [loading, setLoading] = useState(true);
 
-  // -----------------------------
-  // Google Login (Desktop + Mobile safe)
-  // -----------------------------
-  const googleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+//   // -----------------------------
+//   // Google Login (Desktop + Mobile safe)
+//   // -----------------------------
+//   const googleLogin = async () => {
+//     const provider = new GoogleAuthProvider();
+//     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    try {
-      if (isMobile) {
-        // Mobile browsers require redirect-based login
-        await signInWithRedirect(auth, provider);
-      } else {
-        // Desktop browsers support popup login
-        await signInWithPopup(auth, provider);
-      }
-    } catch (error) {
-      console.error("Google Sign-In Error:", error);
-      throw error;
-    }
-  };
+//     try {
+//       if (isMobile) {
+//         // Mobile browsers require redirect-based login
+//         await signInWithRedirect(auth, provider);
+//       } else {
+//         // Desktop browsers support popup login
+//         await signInWithPopup(auth, provider);
+//       }
+//     } catch (error) {
+//       console.error("Google Sign-In Error:", error);
+//       throw error;
+//     }
+//   };
 
-  // -----------------------------
-  // Logout
-  // -----------------------------
-  const logout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-    } catch (error) {
-      console.error("Logout Error:", error);
-    }
-  };
+//   // -----------------------------
+//   // Logout
+//   // -----------------------------
+//   const logout = async () => {
+//     try {
+//       await signOut(auth);
+//       setUser(null);
+//     } catch (error) {
+//       console.error("Logout Error:", error);
+//     }
+//   };
 
-  // -----------------------------
-  // Handle redirect result (Mobile login)
-  // -----------------------------
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          // Auth state will be handled by onAuthStateChanged
-          console.log("Redirect login successful");
-        }
-      })
-      .catch((error) => {
-        console.error("Redirect login error:", error);
-      });
-  }, []);
+//   // -----------------------------
+//   // Handle redirect result (Mobile login)
+//   // -----------------------------
+//   useEffect(() => {
+//     getRedirectResult(auth)
+//       .then((result) => {
+//         if (result?.user) {
+//           // Auth state will be handled by onAuthStateChanged
+//           console.log("Redirect login successful");
+//         }
+//       })
+//       .catch((error) => {
+//         console.error("Redirect login error:", error);
+//       });
+//   }, []);
 
-  // -----------------------------
-  // Listen to Auth State Changes
-  // -----------------------------
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (firebaseUser) {
-          const userDocRef = doc(db, "users", firebaseUser.uid);
-          const userSnap = await getDoc(userDocRef);
+//   // -----------------------------
+//   // Listen to Auth State Changes
+//   // -----------------------------
+//   useEffect(() => {
+//     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+//       try {
+//         if (firebaseUser) {
+//           const userDocRef = doc(db, "users", firebaseUser.uid);
+//           const userSnap = await getDoc(userDocRef);
 
-          if (userSnap.exists()) {
-            // User exists in Firestore
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              photoURL: firebaseUser.photoURL,
-              ...userSnap.data(),
-              isUsernameSet: true,
-            });
-          } else {
-            // New user (setup not completed yet)
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              photoURL: firebaseUser.photoURL,
-              isUsernameSet: false,
-            });
-          }
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        if (firebaseUser) {
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            photoURL: firebaseUser.photoURL,
-            isUsernameSet: false,
-          });
-        } else {
-          setUser(null);
-        }
-      } finally {
-        setLoading(false);
-      }
-    });
+//           if (userSnap.exists()) {
+//             // User exists in Firestore
+//             setUser({
+//               uid: firebaseUser.uid,
+//               email: firebaseUser.email,
+//               photoURL: firebaseUser.photoURL,
+//               ...userSnap.data(),
+//               isUsernameSet: true,
+//             });
+//           } else {
+//             // New user (setup not completed yet)
+//             setUser({
+//               uid: firebaseUser.uid,
+//               email: firebaseUser.email,
+//               photoURL: firebaseUser.photoURL,
+//               isUsernameSet: false,
+//             });
+//           }
+//         } else {
+//           setUser(null);
+//         }
+//       } catch (error) {
+//         console.error("Error fetching user data:", error);
+//         if (firebaseUser) {
+//           setUser({
+//             uid: firebaseUser.uid,
+//             email: firebaseUser.email,
+//             photoURL: firebaseUser.photoURL,
+//             isUsernameSet: false,
+//           });
+//         } else {
+//           setUser(null);
+//         }
+//       } finally {
+//         setLoading(false);
+//       }
+//     });
 
-    return () => unsubscribe();
-  }, []);
+//     return () => unsubscribe();
+//   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, googleLogin, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+//   return (
+//     <AuthContext.Provider value={{ user, googleLogin, logout, loading }}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// };
 
-export const useAuth = () => useContext(AuthContext);
+// export const useAuth = () => useContext(AuthContext);
 
 
 
@@ -639,3 +639,130 @@ export const useAuth = () => useContext(AuthContext);
 // };
 
 // export const useAuth = () => useContext(AuthContext);
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Gork ->
+
+
+import { createContext, useState, useEffect, useContext } from "react";
+import {
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signOut,
+} from "firebase/auth";
+import { doc, onSnapshot } from "firebase/firestore";
+import { auth, db } from "../../firebase.config";
+
+const AuthContext = createContext(null);
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Google Login - Mobile + Desktop safe
+  const googleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" }); // অ্যাকাউন্ট চয়েস দেখাবে
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    try {
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
+    } catch (error) {
+      console.error("Google Sign-In Error:", error);
+      // alert(error.message); // optional: user কে দেখাতে পারো
+      throw error;
+    }
+  };
+
+  // Logout
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Redirect result handle (mobile-এর জন্য)
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          console.log("Redirect login successful:", result.user);
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect result error:", error);
+      });
+
+    // Main auth listener
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Real-time listener for Firestore user doc
+      const userRef = doc(db, "users", firebaseUser.uid);
+      const unsubscribeSnapshot = onSnapshot(
+        userRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              photoURL: firebaseUser.photoURL,
+              ...docSnap.data(),
+              isUsernameSet: true,
+            });
+          } else {
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              photoURL: firebaseUser.photoURL,
+              isUsernameSet: false,
+            });
+          }
+          setLoading(false);
+        },
+        (err) => {
+          console.error("Firestore snapshot error:", err);
+          setLoading(false);
+        }
+      );
+
+      // Cleanup snapshot listener when user changes or unmount
+      return () => unsubscribeSnapshot();
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, googleLogin, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
