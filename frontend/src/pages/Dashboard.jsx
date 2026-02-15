@@ -1,16 +1,22 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase.config';
-import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
 import Button from '../components/Button';
-import { Copy, Trash2, ExternalLink, LogOut, Inbox, RefreshCw } from 'lucide-react';
+import ProfileShareCard from '../components/ProfileShareCard';
+import MessageShareCard from '../components/MessageShareCard';
+import { Copy, Trash2, LogOut, Inbox, Share2, MessageCircle } from 'lucide-react';
 
 const Dashboard = () => {
     const { user, logout } = useAuth();
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    
+    // New State for Share Cards
+    const [showProfileShare, setShowProfileShare] = useState(false);
+    const [selectedMessageForReply, setSelectedMessageForReply] = useState(null);
 
     useEffect(() => {
         if (!user) return;
@@ -50,6 +56,21 @@ const Dashboard = () => {
         }
     };
 
+    // New Function: Mark message as read
+    const markAsRead = async (msg) => {
+        if (msg.seen) return;
+        try {
+            await updateDoc(doc(db, 'messages', msg._id), { seen: true });
+        } catch (err) {
+            console.error("Error marking as read", err);
+        }
+    };
+
+    const handleReplyClick = (msg) => {
+        markAsRead(msg);
+        setSelectedMessageForReply(msg);
+    };
+
     const profileLink = `${window.location.origin}/u/${user?.username}`;
 
     return (
@@ -87,11 +108,13 @@ const Dashboard = () => {
                         >
                             {copied ? "Copied!" : <><Copy className="w-4 h-4 mr-2" /> Copy Link</>}
                         </Button>
-                        <a href={profileLink} target="_blank" rel="noreferrer" className="flex-1">
-                            <Button variant="glass" className="w-full text-sm py-2">
-                                <ExternalLink className="w-4 h-4 mr-2" /> View
-                            </Button>
-                        </a>
+                        <Button 
+                            onClick={() => setShowProfileShare(true)}
+                            variant="primary" 
+                            className="flex-1 text-sm py-2 bg-gradient-to-r from-rose-500 to-orange-500 border-none"
+                        >
+                            <Share2 className="w-4 h-4 mr-2" /> Share Profile
+                        </Button>
                     </div>
                     <p className="text-xs text-white/70">
                         Share this link on your Instagram Story or Snapchat to get anonymous messages!
@@ -103,9 +126,9 @@ const Dashboard = () => {
                     <h3 className="text-xl font-bold flex items-center">
                         <Inbox className="w-5 h-5 mr-2" /> Inbox
                     </h3>
-                    <button className="p-2 hover:bg-white/20 rounded-full transition active:rotate-180">
-                        <RefreshCw className="w-5 h-5" />
-                    </button>
+                    <div className="text-sm bg-white/20 px-3 py-1 rounded-full font-medium">
+                        {messages.filter(m => !m.seen).length} new
+                    </div>
                 </div>
 
                 {/* Messages List */}
@@ -120,23 +143,64 @@ const Dashboard = () => {
                         </div>
                     ) : (
                         messages.map((msg) => (
-                            <div key={msg._id} className="bg-white text-black rounded-3xl p-6 shadow-lg relative group transition hover:scale-[1.01]">
-                                <div className="font-bold text-lg mb-2 break-words leading-snug">
+                            <div 
+                                key={msg._id} 
+                                onClick={() => markAsRead(msg)}
+                                className={`
+                                    relative bg-white text-black rounded-3xl p-6 shadow-lg transition-transform hover:scale-[1.01] cursor-pointer
+                                    ${!msg.seen ? 'border-2 border-rose-500' : ''}
+                                `}
+                            >
+                                {/* Unread Indicator */}
+                                {!msg.seen && (
+                                    <div className="absolute top-4 right-4 w-3 h-3 bg-rose-500 rounded-full animate-pulse shadow-md"></div>
+                                )}
+
+                                <div className="font-bold text-lg mb-4 break-words leading-snug pr-8">
                                     {msg.content}
                                 </div>
-                                <div className="text-xs text-gray-400 font-medium">
-                                    {new Date(msg.createdAt).toLocaleString()}
+                                
+                                <div className="flex items-center justify-between mt-4 border-t border-gray-100 pt-3">
+                                    <div className="text-xs text-gray-400 font-medium">
+                                        {new Date(msg.createdAt).toLocaleString()}
+                                    </div>
+                                    
+                                    <div className="flex space-x-2">
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); deleteMessage(msg._id); }}
+                                            className="text-gray-300 hover:text-red-500 p-2 transition-colors rounded-full hover:bg-red-50"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); handleReplyClick(msg); }}
+                                            className="bg-black text-white px-4 py-2 rounded-full text-xs font-bold flex items-center hover:bg-gray-800 transition shadow-md"
+                                        >
+                                            <MessageCircle className="w-3 h-3 mr-1" /> Reply / Share
+                                        </button>
+                                    </div>
                                 </div>
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); deleteMessage(msg._id); }}
-                                    className="absolute top-4 right-4 text-gray-300 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-all"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
                             </div>
                         ))
                     )}
                 </div>
+
+                {/* Modals */}
+                {showProfileShare && (
+                    <ProfileShareCard 
+                        user={user} 
+                        onClose={() => setShowProfileShare(false)} 
+                    />
+                )}
+
+                {selectedMessageForReply && (
+                    <MessageShareCard 
+                        message={selectedMessageForReply} 
+                        user={user} 
+                        onClose={() => setSelectedMessageForReply(null)} 
+                    />
+                )}
 
             </div>
         </Layout>
