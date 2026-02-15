@@ -12,6 +12,7 @@ import { getStorage } from "firebase/storage";
 const firebaseConfig = {
   apiKey: "AIzaSyCk5Sd2oJabawjnbk8VRc8PP8DDPcYOnhY",
   authDomain: "tokki-516d4.firebaseapp.com",
+  authDomain: "tokki-b2yd.vercel.app",
   projectId: "tokki-516d4",
   storageBucket: "tokki-516d4.firebasestorage.app",
   messagingSenderId: "304460858389",
