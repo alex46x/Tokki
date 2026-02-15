@@ -375,14 +375,109 @@
 
 
 
-import { createContext, useState, useEffect, useContext } from "react";
+// import { createContext, useState, useEffect, useContext } from "react";
+// import {
+//   onAuthStateChanged,
+//   GoogleAuthProvider,
+//   signInWithPopup,
+//   signOut,
+// } from "firebase/auth";
+// import { doc, getDoc } from "firebase/firestore";
+// import { auth, db } from "../../firebase.config";
+
+// const AuthContext = createContext(null);
+
+// export const AuthProvider = ({ children }) => {
+//   const [user, setUser] = useState(null);
+//   const [loading, setLoading] = useState(true);
+
+//   // ✅ Google Login (Desktop + Mobile SAFE)
+//   const googleLogin = async () => {
+//     const provider = new GoogleAuthProvider();
+
+//     // optional but recommended
+//     provider.setCustomParameters({
+//       prompt: "select_account",
+//     });
+
+//     try {
+//       await signInWithPopup(auth, provider);
+//       // Auth state handled by onAuthStateChanged
+//     } catch (error) {
+//       console.error("Google Login Error:", error);
+//       throw error;
+//     }
+//   };
+
+//   // Logout
+//   const logout = async () => {
+//     await signOut(auth);
+//     setUser(null);
+//   };
+
+//   // ✅ Auth state listener (ONLY source of truth)
+//   useEffect(() => {
+//     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+//       try {
+//         if (!firebaseUser) {
+//           setUser(null);
+//           setLoading(false);
+//           return;
+//         }
+
+//         const ref = doc(db, "users", firebaseUser.uid);
+//         const snap = await getDoc(ref);
+
+//         if (snap.exists()) {
+//           setUser({
+//             uid: firebaseUser.uid,
+//             email: firebaseUser.email,
+//             photoURL: firebaseUser.photoURL,
+//             ...snap.data(),
+//             isUsernameSet: true,
+//           });
+//         } else {
+//           setUser({
+//             uid: firebaseUser.uid,
+//             email: firebaseUser.email,
+//             photoURL: firebaseUser.photoURL,
+//             isUsernameSet: false,
+//           });
+//         }
+//       } catch (err) {
+//         console.error("Auth fetch error:", err);
+//         setUser(null);
+//       } finally {
+//         setLoading(false);
+//       }
+//     });
+
+//     return () => unsub();
+//   }, []);
+
+//   return (
+//     <AuthContext.Provider value={{ user, googleLogin, logout, loading }}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// };
+
+// export const useAuth = () => useContext(AuthContext);
+
+
+
+
+// Gemeni code =>
+
+
+  import { createContext, useState, useEffect, useContext } from "react";
 import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore"; // onSnapshot ব্যবহার করা হয়েছে
 import { auth, db } from "../../firebase.config";
 
 const AuthContext = createContext(null);
@@ -391,73 +486,66 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Google Login (Desktop + Mobile SAFE)
   const googleLogin = async () => {
     const provider = new GoogleAuthProvider();
-
-    // optional but recommended
-    provider.setCustomParameters({
-      prompt: "select_account",
-    });
-
+    provider.setCustomParameters({ prompt: "select_account" });
     try {
       await signInWithPopup(auth, provider);
-      // Auth state handled by onAuthStateChanged
     } catch (error) {
       console.error("Google Login Error:", error);
       throw error;
     }
   };
 
-  // Logout
-  const logout = async () => {
-    await signOut(auth);
-    setUser(null);
-  };
+  const logout = () => signOut(auth); // setUser(null) এখানে দরকার নেই
 
-  // ✅ Auth state listener (ONLY source of truth)
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (!firebaseUser) {
-          setUser(null);
+    let unsubscribeSnapshot = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      // যদি আগে কোনো স্ন্যাপশট লিসেনার থাকে তা বন্ধ করা
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+      if (firebaseUser) {
+        // রিয়েল-টাইম লিসেনার: ডাটাবেসে ইউজার আপডেট হলে অ্যাপেও আপডেট হবে
+        const docRef = doc(db, "users", firebaseUser.uid);
+        unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              photoURL: firebaseUser.photoURL,
+              ...docSnap.data(),
+              isUsernameSet: true,
+            });
+          } else {
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              photoURL: firebaseUser.photoURL,
+              isUsernameSet: false,
+            });
+          }
           setLoading(false);
-          return;
-        }
-
-        const ref = doc(db, "users", firebaseUser.uid);
-        const snap = await getDoc(ref);
-
-        if (snap.exists()) {
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            photoURL: firebaseUser.photoURL,
-            ...snap.data(),
-            isUsernameSet: true,
-          });
-        } else {
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            photoURL: firebaseUser.photoURL,
-            isUsernameSet: false,
-          });
-        }
-      } catch (err) {
-        console.error("Auth fetch error:", err);
+        }, (err) => {
+          console.error("Firestore error:", err);
+          setLoading(false);
+        });
+      } else {
         setUser(null);
-      } finally {
         setLoading(false);
       }
     });
 
-    return () => unsub();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+    };
   }, []);
 
   return (
     <AuthContext.Provider value={{ user, googleLogin, logout, loading }}>
-      {children}
+      {!loading && children} 
     </AuthContext.Provider>
   );
 };
