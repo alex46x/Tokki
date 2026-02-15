@@ -674,45 +674,29 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Google Login - Mobile + Desktop safe
-  // const googleLogin = async () => {
-  //   const provider = new GoogleAuthProvider();
-  //   provider.setCustomParameters({ prompt: "select_account" }); // অ্যাকাউন্ট চয়েস দেখাবে
-
-  //   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-  //   try {
-  //     if (isMobile) {
-  //       await signInWithRedirect(auth, provider);
-  //     } else {
-  //       await signInWithPopup(auth, provider);
-  //     }
-  //   } catch (error) {
-  //     console.error("Google Sign-In Error:", error);
-  //     // alert(error.message); // optional: user কে দেখাতে পারো
-  //     throw error;
-  //   }
-  // };
-
-
-
-
   const googleLogin = async () => {
-  const provider = new GoogleAuthProvider();
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" }); // অ্যাকাউন্ট চয়েস দেখাবে
 
-  try {
-    // Always try popup first
-    await signInWithPopup(auth, provider);
-  } catch (error) {
-    // Fallback for browsers that block popup
-    if (error.code === "auth/popup-blocked") {
-      await signInWithRedirect(auth, provider);
-    } else {
-      console.error(error);
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    try {
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
+    } catch (error) {
+      console.error("Google Sign-In Error:", error);
+      // alert(error.message); // optional: user কে দেখাতে পারো
       throw error;
     }
-  }
-};
+  };
 
+
+
+
+  
 
 
   // Logout
