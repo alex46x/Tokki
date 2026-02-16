@@ -14,7 +14,7 @@ const MessageShareCard = ({ message, user, onClose }) => {
         setIsGenerating(true);
         try {
             const dataUrl = await toPng(cardRef.current, { cacheBust: true });
-            download(dataUrl, `tokki-reply-${message._id}.png`);
+            download(dataUrl, `tuki-reply-${message._id}.png`);
         } catch (err) {
             console.error("Failed to generate image", err);
         } finally {

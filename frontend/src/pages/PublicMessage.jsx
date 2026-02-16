@@ -161,7 +161,7 @@ const PublicMessage = () => {
 
                 <div className="mt-auto pt-10">
                     <Link to="/" className="text-white/80 font-bold text-sm hover:underline">
-                        Get your own link on Tokki
+                        Get your own link on Tuki
                     </Link>
                 </div>
 

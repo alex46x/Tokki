@@ -14,7 +14,7 @@ const ProfileShareCard = ({ user, onClose }) => {
         setIsGenerating(true);
         try {
             const dataUrl = await toPng(cardRef.current, { cacheBust: true });
-            download(dataUrl, `tokki-profile-${user.username}.png`);
+            download(dataUrl, `tuki-profile-${user.username}.png`);
         } catch (err) {
             console.error('Failed to generate image', err);
         } finally {

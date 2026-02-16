@@ -42,7 +42,7 @@ const Login = () => {
                         <span className="text-5xl">🤫</span>
                     </div>
                     <h1 className="text-5xl font-black tracking-tight drop-shadow-md">
-                        Tokki
+                        Tuki
                     </h1>
                     <p className="text-xl font-medium text-white/90">
                         Get anonymous messages!

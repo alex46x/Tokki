@@ -9,8 +9,8 @@ const Layout = ({ children, showFooter = true }) => {
       
       {showFooter && (
         <footer className="w-full p-4 text-center text-white/60 text-xs mt-auto">
-          <p>Tokki • Anonymous Messaging</p>
-          <p className="mt-1">&copy; {new Date().getFullYear()} Tokki</p>
+          <p>Tuki • Anonymous Messaging</p>
+          <p className="mt-1">&copy; {new Date().getFullYear()} Tuki</p>
         </footer>
       )}
     </div>
