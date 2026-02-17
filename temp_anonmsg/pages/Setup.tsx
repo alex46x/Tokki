@@ -63,8 +63,8 @@ const Setup: React.FC = () => {
             <img src={photoUrl} alt="Profile" className="w-full h-full object-cover" />
           </div>
           <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-            <Camera className="w-8 h-8 text-white" />
-            <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+            {/* <Camera className="w-8 h-8 text-white" />
+            <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} /> */}
           </label>
         </div>
 
