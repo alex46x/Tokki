@@ -6,6 +6,7 @@ import Layout from '../components/Layout';
 import Button from '../components/Button';
 import ProfileShareCard from '../components/ProfileShareCard';
 import MessageShareCard from '../components/MessageShareCard';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import { Copy, Trash2, LogOut, Inbox, Share2, MessageCircle } from 'lucide-react';
 
 const Dashboard = () => {
@@ -17,6 +18,8 @@ const Dashboard = () => {
     // New State for Share Cards
     const [showProfileShare, setShowProfileShare] = useState(false);
     const [selectedMessageForReply, setSelectedMessageForReply] = useState(null);
+    const [messagePendingDelete, setMessagePendingDelete] = useState(null);
+    const [isDeletingMessage, setIsDeletingMessage] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -47,12 +50,26 @@ const Dashboard = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const deleteMessage = async (id) => {
-        if (!confirm('Delete this message?')) return;
+    const requestDeleteMessage = (id) => {
+        setMessagePendingDelete(id);
+    };
+
+    const closeDeleteModal = () => {
+        if (isDeletingMessage) return;
+        setMessagePendingDelete(null);
+    };
+
+    const confirmDeleteMessage = async () => {
+        if (!messagePendingDelete) return;
+
+        setIsDeletingMessage(true);
         try {
-            await deleteDoc(doc(db, 'messages', id));
+            await deleteDoc(doc(db, 'messages', messagePendingDelete));
+            setMessagePendingDelete(null);
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsDeletingMessage(false);
         }
     };
 
@@ -167,7 +184,7 @@ const Dashboard = () => {
                                     
                                     <div className="flex space-x-2">
                                         <button 
-                                            onClick={(e) => { e.stopPropagation(); deleteMessage(msg._id); }}
+                                            onClick={(e) => { e.stopPropagation(); requestDeleteMessage(msg._id); }}
                                             className="text-gray-300 hover:text-red-500 p-2 transition-colors rounded-full hover:bg-red-50"
                                             title="Delete"
                                         >
@@ -201,6 +218,16 @@ const Dashboard = () => {
                         onClose={() => setSelectedMessageForReply(null)} 
                     />
                 )}
+
+                <ConfirmDeleteModal
+                    isOpen={Boolean(messagePendingDelete)}
+                    onClose={closeDeleteModal}
+                    onConfirm={confirmDeleteMessage}
+                    isDeleting={isDeletingMessage}
+                    title="Delete this message?"
+                    message="Are you sure you want to delete this message?"
+                    description="This action cannot be undone."
+                />
 
             </div>
         </Layout>

@@ -1,5 +1,0 @@
-{
-  "name": "AnonMsg",
-  "description": "A simple NGL-style anonymous messaging platform where users can receive anonymous questions and messages.",
-  "requestFramePermissions": []
-}

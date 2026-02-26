@@ -13,6 +13,7 @@ const PublicMessage = () => {
     const [sent, setSent] = useState(false);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
+    const [sendError, setSendError] = useState('');
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -39,6 +40,7 @@ const PublicMessage = () => {
         e.preventDefault();
         if (!message.trim() || !recipient) return;
         
+        setSendError('');
         setSending(true);
         try {
             await addDoc(collection(db, 'messages'), {
@@ -51,7 +53,7 @@ const PublicMessage = () => {
             setMessage('');
         } catch (err) {
             console.error(err);
-            alert("Failed to send");
+            setSendError('Message could not be sent right now. Please try again.');
         } finally {
             setSending(false);
         }
@@ -131,7 +133,10 @@ const PublicMessage = () => {
                         <div className="absolute inset-0 bg-white/20 blur-xl rounded-full transform group-hover:scale-105 transition-transform duration-500"></div>
                         <textarea
                             value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            onChange={(e) => {
+                                setMessage(e.target.value);
+                                if (sendError) setSendError('');
+                            }}
                             placeholder="Send me an anonymous message..."
                             className="relative w-full h-40 p-6 rounded-3xl text-black font-bold text-xl placeholder:text-gray-400 placeholder:font-bold focus:outline-none focus:ring-4 focus:ring-white/50 resize-none shadow-2xl"
                             maxLength={300}
@@ -143,6 +148,11 @@ const PublicMessage = () => {
                     </div>
 
                     <div className="space-y-3">
+                        {sendError && (
+                            <div className="rounded-2xl border border-red-300/50 bg-red-500/20 px-4 py-3 text-sm font-medium text-red-100">
+                                {sendError}
+                            </div>
+                        )}
                         <Button 
                             type="submit" 
                             variant="secondary" 

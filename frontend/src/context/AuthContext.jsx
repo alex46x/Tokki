@@ -588,7 +588,7 @@
 //       }
 //     } catch (error) {
 //       console.error("Login Error:", error);
-//       alert("Login Error: " + error.message);
+//       // show error UI here if needed
 //     }
 //   };
 
@@ -688,7 +688,7 @@ export const AuthProvider = ({ children }) => {
   //     }
   //   } catch (error) {
   //     console.error("Google Sign-In Error:", error);
-  //     // alert(error.message); // optional: user কে দেখাতে পারো
+  //     // optional: show an inline error message for the user
   //     throw error;
   //   }
   // };
